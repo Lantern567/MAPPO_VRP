@@ -15,13 +15,13 @@ class Scenario:
     """
 
     def __init__(self):
-        # Reward parameters
-        self.delivery_bonus = 10.0
-        self.late_penalty = 0.5       # Per step late
-        self.energy_cost = 0.1
-        self.completion_bonus = 50.0
-        self.incomplete_penalty = 10.0
-        self.forced_return_penalty = 1.0
+        # Reward parameters - minimize time objective
+        self.time_penalty = 0.1           # Cost per time step (encourages speed)
+        self.delivery_bonus = 5.0         # Reward per delivery
+        self.completion_bonus = 100.0     # Big bonus for completing all deliveries
+        self.incomplete_penalty = 20.0    # Penalty per unserved customer at end
+        self.energy_cost = 0.01           # Small energy cost
+        self.forced_return_penalty = 0.5  # Penalty for forced return
 
     def make_world(self, args):
         """
@@ -340,6 +340,7 @@ class Scenario:
     def compute_global_reward(self, world):
         """
         Compute global reward for cooperative scenario.
+        Objective: minimize time to complete all deliveries.
         Called ONCE per step, all agents receive the same reward.
 
         Returns:
@@ -347,30 +348,33 @@ class Scenario:
         """
         rew = 0.0
 
-        # 1. Delivery rewards this step
+        # 1. Time penalty - encourages faster completion
+        rew -= self.time_penalty
+
+        # 2. Delivery rewards this step
         for c in world.customers:
             if c.just_served_this_step:
                 rew += self.delivery_bonus
-                # Time window penalty
-                late = max(0, c.state.arrival_step - c.state.time_window_end)
-                rew -= self.late_penalty * late
 
-        # 2. Energy consumption
+        # 3. Energy consumption (small)
         for d in world.drones:
             rew -= self.energy_cost * d.battery_used_this_step
 
-        # 3. Forced return penalty
+        # 4. Forced return penalty
         for d in world.drones:
             if d.forced_return_this_step:
                 rew -= self.forced_return_penalty
 
-        # 4. Terminal reward
+        # 5. Terminal reward
         if self.is_terminal(world):
             served = sum(1 for c in world.customers if c.state.served)
             total = len(world.customers)
             if served == total:
+                # Big bonus for completing all deliveries
+                # Earlier completion = fewer time penalties accumulated = higher total reward
                 rew += self.completion_bonus
             else:
+                # Penalty for incomplete deliveries
                 rew -= self.incomplete_penalty * (total - served)
 
         return rew

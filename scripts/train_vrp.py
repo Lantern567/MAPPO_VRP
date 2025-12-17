@@ -12,8 +12,6 @@ import os
 # Add mappo parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
-import wandb
-import socket
 import setproctitle
 import numpy as np
 from pathlib import Path
@@ -139,38 +137,23 @@ def main(args):
     if not run_dir.exists():
         os.makedirs(str(run_dir))
 
-    # Wandb setup
-    if all_args.use_wandb:
-        run = wandb.init(
-            config=all_args,
-            project=all_args.env_name,
-            entity=all_args.user_name,
-            notes=socket.gethostname(),
-            name=f"{all_args.algorithm_name}_{all_args.experiment_name}_seed{all_args.seed}",
-            group=all_args.scenario_name,
-            dir=str(run_dir),
-            job_type="training",
-            reinit=True
-        )
+    # Create run subfolder
+    exst_run_nums = [
+        int(str(folder.name).split('run')[1])
+        for folder in run_dir.iterdir()
+        if str(folder.name).startswith('run')
+    ] if run_dir.exists() else []
+
+    if len(exst_run_nums) == 0:
+        curr_run = 'run1'
     else:
-        if not run_dir.exists():
-            curr_run = 'run1'
-        else:
-            exst_run_nums = [
-                int(str(folder.name).split('run')[1])
-                for folder in run_dir.iterdir()
-                if str(folder.name).startswith('run')
-            ]
-            if len(exst_run_nums) == 0:
-                curr_run = 'run1'
-            else:
-                curr_run = 'run%i' % (max(exst_run_nums) + 1)
-        run_dir = run_dir / curr_run
-        if not run_dir.exists():
-            os.makedirs(str(run_dir))
+        curr_run = 'run%i' % (max(exst_run_nums) + 1)
+    run_dir = run_dir / curr_run
+    if not run_dir.exists():
+        os.makedirs(str(run_dir))
 
     setproctitle.setproctitle(
-        f"{all_args.algorithm_name}-VRP-{all_args.experiment_name}@{all_args.user_name}"
+        f"{all_args.algorithm_name}-VRP-{all_args.experiment_name}"
     )
 
     # Seed
@@ -205,11 +188,9 @@ def main(args):
     if all_args.use_eval and eval_envs is not envs:
         eval_envs.close()
 
-    if all_args.use_wandb:
-        run.finish()
-    else:
-        runner.writter.export_scalars_to_json(str(runner.log_dir + '/summary.json'))
-        runner.writter.close()
+    # Save tensorboard summary and close
+    runner.writter.export_scalars_to_json(str(runner.log_dir + '/summary.json'))
+    runner.writter.close()
 
 
 if __name__ == "__main__":

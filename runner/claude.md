@@ -11,7 +11,8 @@
 | 文件 | 功能 |
 |-----|------|
 | `__init__.py` | 包初始化 |
-| `vrp_runner.py` | VRP 专用 Runner，继承自 on-policy 框架 |
+| `base_runner.py` | 基类 Runner，管理训练循环、模型保存等 |
+| `vrp_runner.py` | VRP 专用 Runner，继承自 base_runner |
 
 ---
 
@@ -20,11 +21,11 @@
 ### 继承关系
 
 ```
-on-policy/onpolicy/runner/separated/base_runner.py
-                    │
-                    └── Runner (基类)
-                            │
-                            └── VRPRunner (本项目)
+mappo/runner/base_runner.py
+           │
+           └── Runner (基类)
+                   │
+                   └── VRPRunner (VRP 专用)
 ```
 
 ### 为什么使用 Separated Runner?
@@ -391,22 +392,22 @@ for i in range(n_rollout_threads):
 
 ---
 
-## 与 on-policy 框架的关系
+## 模块结构
 
 ```
-on-policy/onpolicy/
+mappo/
 ├── runner/
-│   └── separated/
-│       └── base_runner.py    ← VRPRunner 继承此类
+│   ├── base_runner.py       ← VRPRunner 继承此类
+│   └── vrp_runner.py        ← VRP 专用 Runner
 │
 ├── algorithms/
 │   └── r_mappo/
-│       └── r_mappo.py        ← 训练算法
+│       └── r_mappo.py       ← 训练算法 R_MAPPO
 │
 ├── utils/
-│   └── separated_buffer.py   ← Replay Buffer
+│   └── separated_buffer.py  ← Replay Buffer
 │
-└── config.py                  ← 参数配置
+└── config.py                ← 参数配置
 ```
 
 VRPRunner 覆盖的方法:

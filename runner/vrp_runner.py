@@ -1,19 +1,13 @@
 """
 VRP Runner for MAPPO training.
-Inherits from on-policy's separated runner and customizes for VRP.
+Inherits from base_runner and customizes for VRP.
 """
 
 import time
 import numpy as np
 import torch
 
-# Import from on-policy framework
-import sys
-import os
-# Add on-policy to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../on-policy'))
-
-from onpolicy.runner.separated.base_runner import Runner
+from mappo.runner.base_runner import Runner
 
 
 def _t2n(x):

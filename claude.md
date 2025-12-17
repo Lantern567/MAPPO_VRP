@@ -26,6 +26,32 @@
 mappo/
 ├── __init__.py              # 包初始化
 ├── claude.md                # 本文档 - 项目总览
+├── config.py                # 配置解析器
+│
+├── algorithms/              # 算法模块 (MAPPO 实现)
+│   ├── __init__.py
+│   ├── r_mappo/            # MAPPO 算法
+│   │   ├── __init__.py
+│   │   ├── r_mappo.py      # 训练器 R_MAPPO
+│   │   └── algorithm/
+│   │       ├── __init__.py
+│   │       ├── rMAPPOPolicy.py  # 策略类
+│   │       └── r_actor_critic.py # Actor-Critic 网络
+│   └── utils/              # 神经网络组件
+│       ├── __init__.py
+│       ├── util.py         # 初始化函数
+│       ├── mlp.py          # MLP 网络
+│       ├── cnn.py          # CNN 网络
+│       ├── rnn.py          # RNN 网络
+│       ├── act.py          # 动作层
+│       ├── distributions.py # 概率分布
+│       └── popart.py       # PopArt 归一化
+│
+├── utils/                   # 通用工具
+│   ├── __init__.py
+│   ├── util.py             # 工具函数
+│   ├── separated_buffer.py # 经验回放缓冲区
+│   └── valuenorm.py        # 值函数归一化
 │
 ├── envs/                    # 环境定义
 │   ├── __init__.py
@@ -45,6 +71,7 @@ mappo/
 ├── runner/                  # 训练运行器
 │   ├── __init__.py
 │   ├── claude.md            # Runner 文档
+│   ├── base_runner.py       # 基类 Runner
 │   └── vrp_runner.py        # VRP 专用 Runner
 │
 ├── scripts/                 # 训练脚本
@@ -153,27 +180,47 @@ tensorboard --logdir mappo/results/VRP/truck_drone_basic/mappo/
 
 ## 依赖关系
 
-### 外部依赖
+### 项目自包含
 
-本项目依赖 [on-policy](../on-policy/) MAPPO 框架：
+本项目已包含完整的 MAPPO 算法实现，无需外部依赖框架：
 
 ```
-mappo/                      on-policy/
-  │                            │
-  ├── runner/                  ├── onpolicy/
-  │   └── vrp_runner.py ────→  │   └── runner/separated/base_runner.py
-  │                            │
-  └── scripts/                 ├── onpolicy/config.py
-      └── train_vrp.py ────→   └── onpolicy/algorithms/r_mappo/
+mappo/
+├── config.py                     # 配置解析器
+├── algorithms/r_mappo/           # MAPPO 算法核心
+│   ├── r_mappo.py               # 训练器
+│   └── algorithm/
+│       ├── rMAPPOPolicy.py      # 策略类
+│       └── r_actor_critic.py    # Actor-Critic 网络
+├── algorithms/utils/             # 神经网络组件
+├── utils/                        # 通用工具 (buffer, valuenorm)
+└── runner/base_runner.py         # 基类 Runner
 ```
 
 ### 关键导入
 
 ```python
-# 从 on-policy 框架导入
-from onpolicy.runner.separated.base_runner import Runner
-from onpolicy.config import get_config
-from onpolicy.algorithms.r_mappo.r_mappo import R_MAPPO
+# 配置解析
+from mappo.config import get_config
+
+# 训练运行器
+from mappo.runner.base_runner import Runner
+from mappo.runner.vrp_runner import VRPRunner
+
+# MAPPO 算法
+from mappo.algorithms.r_mappo.r_mappo import R_MAPPO
+from mappo.algorithms.r_mappo.algorithm.rMAPPOPolicy import R_MAPPOPolicy
+
+# 工具
+from mappo.utils.separated_buffer import SeparatedReplayBuffer
+from mappo.utils.util import check, get_gard_norm
+from mappo.utils.valuenorm import ValueNorm
+```
+
+### 外部依赖包
+
+```bash
+pip install torch numpy wandb setproctitle tensorboardX gym
 ```
 
 ---

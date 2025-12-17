@@ -9,9 +9,8 @@ Usage:
 import sys
 import os
 
-# Add paths
+# Add mappo parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../on-policy'))
 
 import wandb
 import socket
@@ -20,7 +19,7 @@ import numpy as np
 from pathlib import Path
 import torch
 
-from onpolicy.config import get_config
+from mappo.config import get_config
 from mappo.envs.vrp.VRP_env import VRPEnv
 from mappo.envs.vrp.env_wrappers import VRPDummyVecEnv, VRPSubprocVecEnv
 

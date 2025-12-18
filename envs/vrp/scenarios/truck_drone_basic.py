@@ -7,6 +7,7 @@ Continuous 2D space, discrete time steps
 
 import numpy as np
 from mappo.envs.vrp.core import World, Truck, Drone, Customer
+from mappo.envs.vrp.distance_utils import drone_distance
 
 
 class Scenario:
@@ -313,7 +314,8 @@ class Scenario:
 
             # RECOVER: only available for nearby drones that are not onboard
             for i, d in enumerate(world.drones):
-                dist = np.linalg.norm(d.state.p_pos - agent.state.p_pos)
+                # Drone distance (L2) for recovery check
+                dist = drone_distance(d.state.p_pos, agent.state.p_pos)
                 if dist > world.recovery_threshold or d.state.status == 'onboard':
                     mask[1 + num_nodes + num_drones + i] = 0
 
